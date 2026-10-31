@@ -176,8 +176,8 @@ SkinBud avoids generic UI templates, utilizing a tailored beauty color system:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/FaceCare.git
-cd FaceCare
+git clone https://github.com/tensormind-tech/SkinBud.git
+cd SkinBud
 ```
 
 ### 2. Configure API Keys
