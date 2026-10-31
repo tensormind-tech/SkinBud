@@ -38,8 +38,8 @@ class GroqApiClient(private val context: Context) {
 
     companion object {
         const val DEFAULT_GROQ_KEY = ""
-        const val DEFAULT_MODEL = "openai/gpt-oss-120b"
-        const val FALLBACK_MODEL = "llama-3.3-70b-versatile"
+        const val DEFAULT_MODEL = "llama-3.3-70b-versatile"
+        const val FALLBACK_MODEL = "llama-3.1-8b-instant"
     }
 
     var apiKey: String
@@ -47,7 +47,10 @@ class GroqApiClient(private val context: Context) {
         set(value) = prefs.edit().putString("groq_api_key", value.trim()).apply()
 
     var selectedModel: String
-        get() = prefs.getString("groq_model", DEFAULT_MODEL) ?: DEFAULT_MODEL
+        get() {
+            val saved = prefs.getString("groq_model", DEFAULT_MODEL) ?: DEFAULT_MODEL
+            return if (saved == "openai/gpt-oss-120b" || saved.isBlank()) DEFAULT_MODEL else saved
+        }
         set(value) = prefs.edit().putString("groq_model", value.trim()).apply()
 
     suspend fun analyzeAndRecommend(

@@ -57,7 +57,18 @@ import com.skinbud.app.ui.theme.RoseQuartz
 import com.skinbud.app.ui.theme.SageEmerald
 import com.skinbud.app.ui.theme.SkinBudTheme
 
+import android.content.Intent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+
 class MainActivity : ComponentActivity() {
+
+    private val currentTabState = mutableStateOf(NavigationTab.HOME)
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -72,13 +83,7 @@ class MainActivity : ComponentActivity() {
         requestAppPermissions()
         ReminderScheduler.scheduleAllReminders(this)
 
-        val initialTab = when (intent?.data?.host) {
-            "scan" -> NavigationTab.SCAN
-            "tryon" -> NavigationTab.TRY_ON
-            "routine" -> NavigationTab.ROUTINE
-            "shelf" -> NavigationTab.SHELF
-            else -> NavigationTab.HOME
-        }
+        intent?.let { updateTabFromIntent(it) }
 
         val app = application as SkinBudApp
 
@@ -100,11 +105,31 @@ class MainActivity : ComponentActivity() {
                 } else {
                     MainAppScaffold(
                         app = app,
-                        initialTab = initialTab,
+                        currentTab = currentTabState.value,
+                        onTabSelected = { currentTabState.value = it },
                         onReplayOnboarding = { showOnboarding = true }
                     )
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent?.let { updateTabFromIntent(it) }
+    }
+
+    private fun updateTabFromIntent(intent: Intent) {
+        val target = when (intent.data?.host) {
+            "scan" -> NavigationTab.SCAN
+            "tryon" -> NavigationTab.TRY_ON
+            "routine" -> NavigationTab.ROUTINE
+            "shelf" -> NavigationTab.SHELF
+            else -> null
+        }
+        if (target != null) {
+            currentTabState.value = target
         }
     }
 
@@ -127,10 +152,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppScaffold(
     app: SkinBudApp,
-    initialTab: NavigationTab = NavigationTab.HOME,
+    currentTab: NavigationTab = NavigationTab.HOME,
+    onTabSelected: (NavigationTab) -> Unit = {},
     onReplayOnboarding: () -> Unit = {}
 ) {
-    var currentTab by remember { mutableStateOf(initialTab) }
     var showCartSheet by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -159,7 +184,7 @@ fun MainAppScaffold(
         bottomBar = {
             SkinBudBottomBar(
                 currentTab = currentTab,
-                onTabSelected = { currentTab = it }
+                onTabSelected = onTabSelected
             )
         }
     ) { innerPadding ->
@@ -172,14 +197,14 @@ fun MainAppScaffold(
                 NavigationTab.HOME -> HomeScreen(
                     glowRepo = app.glowRepository,
                     routineRepo = app.routineRepository,
-                    onNavigateToScan = { currentTab = NavigationTab.SCAN },
-                    onNavigateToRoutine = { currentTab = NavigationTab.ROUTINE },
-                    onNavigateToVto = { currentTab = NavigationTab.TRY_ON }
+                    onNavigateToScan = { onTabSelected(NavigationTab.SCAN) },
+                    onNavigateToRoutine = { onTabSelected(NavigationTab.ROUTINE) },
+                    onNavigateToVto = { onTabSelected(NavigationTab.TRY_ON) }
                 )
                 NavigationTab.SCAN -> ScanScreen(
                     glowRepo = app.glowRepository,
-                    onScanSaved = { currentTab = NavigationTab.HOME },
-                    onNavigateToVto = { currentTab = NavigationTab.TRY_ON }
+                    onScanSaved = { onTabSelected(NavigationTab.HOME) },
+                    onNavigateToVto = { onTabSelected(NavigationTab.TRY_ON) }
                 )
                 NavigationTab.TRY_ON -> VtoStudioScreen(
                     glowRepo = app.glowRepository,
@@ -227,6 +252,8 @@ fun AppSettingsDialog(
     var perfectCorpEndpoint by remember { mutableStateOf(app.glowRepository.perfectCorpClient.endpointUrl) }
     var groqKey by remember { mutableStateOf(app.productRepository.groqClient.apiKey) }
     var groqModel by remember { mutableStateOf(app.productRepository.groqClient.selectedModel) }
+    var showPerfectCorpKey by remember { mutableStateOf(false) }
+    var showGroqKey by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -269,6 +296,15 @@ fun AppSettingsDialog(
                     onValueChange = { perfectCorpKey = it },
                     label = { Text("Perfect Corp API Key") },
                     placeholder = { Text("Optional - fallback to on-device AI") },
+                    visualTransformation = if (showPerfectCorpKey) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showPerfectCorpKey = !showPerfectCorpKey }) {
+                            Icon(
+                                imageVector = if (showPerfectCorpKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPerfectCorpKey) "Hide key" else "Show key"
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -279,6 +315,15 @@ fun AppSettingsDialog(
                     value = groqKey,
                     onValueChange = { groqKey = it },
                     label = { Text("Groq AI Key (Amazon Recommendation)") },
+                    visualTransformation = if (showGroqKey) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showGroqKey = !showGroqKey }) {
+                            Icon(
+                                imageVector = if (showGroqKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showGroqKey) "Hide key" else "Show key"
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -286,7 +331,7 @@ fun AppSettingsDialog(
                 OutlinedTextField(
                     value = groqModel,
                     onValueChange = { groqModel = it },
-                    label = { Text("Groq Model (e.g. openai/gpt-oss-120b)") },
+                    label = { Text("Groq Model (e.g. llama-3.3-70b-versatile)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )

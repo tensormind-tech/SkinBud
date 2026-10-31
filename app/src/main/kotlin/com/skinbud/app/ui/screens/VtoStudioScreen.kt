@@ -107,6 +107,7 @@ import com.skinbud.app.ui.theme.RoseQuartz
 import com.skinbud.app.ui.theme.SageEmerald
 import com.skinbud.app.ui.theme.WarmChampagne
 import kotlinx.coroutines.launch
+import androidx.core.content.FileProvider
 import java.io.File
 import java.io.InputStream
 import java.util.UUID
@@ -206,10 +207,15 @@ fun VtoStudioScreen(
                 val isAsset: InputStream = context.assets.open("art/face_photo.jpg")
                 originalBitmap = BitmapFactory.decodeStream(isAsset)
             } catch (_: Exception) {
-                val fallback = Bitmap.createBitmap(480, 640, Bitmap.Config.ARGB_8888)
-                val canvas = android.graphics.Canvas(fallback)
-                canvas.drawColor(android.graphics.Color.parseColor("#E8D8CF"))
-                originalBitmap = fallback
+                val demoFace = BitmapFactory.decodeResource(context.resources, com.skinbud.app.R.drawable.onboarding_scan)
+                if (demoFace != null) {
+                    originalBitmap = demoFace
+                } else {
+                    val fallback = Bitmap.createBitmap(480, 640, Bitmap.Config.ARGB_8888)
+                    val canvas = android.graphics.Canvas(fallback)
+                    canvas.drawColor(android.graphics.Color.parseColor("#E8D8CF"))
+                    originalBitmap = fallback
+                }
             }
         }
     }
@@ -344,13 +350,33 @@ fun VtoStudioScreen(
         }
     }
 
+    var tempCameraFile by remember { mutableStateOf<File?>(null) }
+
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { newBitmap: Bitmap? ->
-        newBitmap?.let {
-            originalBitmap = it
-            if (studioMode == 0) applySimulation(selectedSimDay) else applyVto()
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        val file = tempCameraFile
+        if (success && file != null && file.exists()) {
+            val loaded = BitmapFactory.decodeFile(file.absolutePath)
+            if (loaded != null) {
+                originalBitmap = loaded
+                if (studioMode == 0) applySimulation(selectedSimDay) else applyVto()
+            }
         }
+    }
+
+    fun launchCamera() {
+        try {
+            val cacheImagesDir = File(context.cacheDir, "images").apply { mkdirs() }
+            val file = File(cacheImagesDir, "vto_capture_${System.currentTimeMillis()}.jpg")
+            tempCameraFile = file
+            val uri = FileProvider.getUriForFile(
+                context,
+                "com.skinbud.app.files",
+                file
+            )
+            cameraLauncher.launch(uri)
+        } catch (_: Exception) {}
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -635,7 +661,7 @@ fun VtoStudioScreen(
                     color = Color.Black.copy(alpha = 0.6f),
                     modifier = Modifier
                         .size(36.dp)
-                        .clickable { cameraLauncher.launch(null) }
+                        .clickable { launchCamera() }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(

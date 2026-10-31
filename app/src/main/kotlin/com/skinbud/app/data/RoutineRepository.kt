@@ -46,6 +46,15 @@ class RoutineRepository(private val context: Context) {
             } else {
                 saveRoutine()
             }
+
+            val prefs = context.getSharedPreferences("skinbud_streak_prefs", Context.MODE_PRIVATE)
+            val savedStreak = prefs.getInt("streak_count", -1)
+            if (savedStreak > 0) {
+                _currentStreak.value = savedStreak
+            } else if (streakFile.exists()) {
+                val s = streakFile.readText().trim().toIntOrNull() ?: 3
+                _currentStreak.value = s
+            }
         } catch (e: Exception) {
             Log.e("RoutineRepo", "Failed to load routine data", e)
         }
@@ -178,6 +187,20 @@ class RoutineRepository(private val context: Context) {
 
         _routine.value = current.copy(morningSteps = updatedMorning, eveningSteps = updatedEvening)
         saveRoutine()
+
+        val allAmDone = updatedMorning.isNotEmpty() && updatedMorning.all { it.isCompleted }
+        val allPmDone = updatedEvening.isNotEmpty() && updatedEvening.all { it.isCompleted }
+        if (allAmDone || allPmDone) {
+            val prefs = context.getSharedPreferences("skinbud_streak_prefs", Context.MODE_PRIVATE)
+            val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+            val lastRecordedDay = prefs.getString("last_streak_day", "") ?: ""
+            if (lastRecordedDay != todayStr) {
+                val newStreak = _currentStreak.value + 1
+                _currentStreak.value = newStreak
+                prefs.edit().putString("last_streak_day", todayStr).putInt("streak_count", newStreak).apply()
+                try { streakFile.writeText(newStreak.toString()) } catch (_: Exception) {}
+            }
+        }
     }
 
     fun resetDailyProgress() {

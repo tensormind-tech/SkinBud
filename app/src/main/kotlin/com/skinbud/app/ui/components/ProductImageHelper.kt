@@ -41,10 +41,10 @@ object ProductImageHelper {
             category?.uppercase()?.contains("CLEANSER") == true -> R.drawable.prod_cleanse_oat
             category?.uppercase()?.contains("TONER") == true -> R.drawable.prod_toner_heartleaf
             category?.uppercase()?.contains("SERUM") == true -> R.drawable.prod_serum_hyaluronic
-            category?.uppercase()?.contains("MOISTURIZER") == true -> R.drawable.prod_cleanse_oat
-            category?.uppercase()?.contains("SUNSCREEN") == true -> R.drawable.prod_cleanse_oat
+            category?.uppercase()?.contains("MOISTURIZER") == true -> R.drawable.prod_serum_cica
+            category?.uppercase()?.contains("SUNSCREEN") == true -> R.drawable.prod_serum_hyaluronic
             category?.uppercase()?.contains("EXFOLIANT") == true -> R.drawable.prod_cleanse_bha
-            else -> R.drawable.prod_cleanse_oat
+            else -> R.drawable.prod_serum_hyaluronic
         }
     }
 }

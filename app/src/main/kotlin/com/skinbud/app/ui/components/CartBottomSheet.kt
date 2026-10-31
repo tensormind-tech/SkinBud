@@ -109,14 +109,14 @@ fun CartBottomSheet(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Order Confirmed!",
+                    text = "Regimen Bag Saved!",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = DarkSlate
                 )
 
                 Text(
-                    text = "Order #SB-94821 • Estimated Delivery in 2 Days",
+                    text = "Regimen Plan #SB-94821 • Curated Amazon Skincare Regimen",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MutedOlive
                 )
@@ -463,7 +463,7 @@ fun CartBottomSheet(
                         Icon(Icons.Default.LocalShipping, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Proceed to 1-Click Checkout • $${String.format("%.2f", summary.total)}",
+                            text = "Save Regimen & Explore on Amazon • $${String.format("%.2f", summary.total)}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = Color.White

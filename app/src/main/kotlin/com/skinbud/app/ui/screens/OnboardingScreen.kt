@@ -6,6 +6,13 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import java.io.File
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -97,6 +104,8 @@ fun OnboardingScreen(
     var selectedTargetConcern by remember { mutableStateOf(prefs.getString("target_concern", "Hydration & Barrier") ?: "Hydration & Barrier") }
     var selectedSunExposure by remember { mutableStateOf(prefs.getString("sun_exposure", "Moderate") ?: "Moderate") }
     var apiKeyInput by remember { mutableStateOf(glowRepo.perfectCorpClient.apiKey) }
+    var showApiKey by remember { mutableStateOf(false) }
+    var tempCameraFile by remember { mutableStateOf<File?>(null) }
 
     fun finishScanAndComplete(bitmap: Bitmap) {
         isScanning = true
@@ -121,9 +130,31 @@ fun OnboardingScreen(
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        bitmap?.let { finishScanAndComplete(it) }
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        val file = tempCameraFile
+        if (success && file != null && file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            if (bitmap != null) {
+                finishScanAndComplete(bitmap)
+            }
+        }
+    }
+
+    fun launchCamera() {
+        try {
+            val cacheImagesDir = File(context.cacheDir, "images").apply { mkdirs() }
+            val file = File(cacheImagesDir, "onboarding_capture_${System.currentTimeMillis()}.jpg")
+            tempCameraFile = file
+            val uri = FileProvider.getUriForFile(
+                context,
+                "com.skinbud.app.files",
+                file
+            )
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            scanErrorMessage = "Camera error: ${e.message}"
+        }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -463,7 +494,7 @@ fun OnboardingScreen(
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Add your key from https://yce.perfectcorp.com/ to enable live cloud diagnostics. If left blank, real on-device computer vision will be used.",
+                                        text = "Add your key from Perfect Corp Developer Console (https://yce.perfectcorp.com/) to enable live cloud diagnostics. If left blank, real on-device computer vision will be used.",
                                         fontSize = 11.sp,
                                         color = MutedOlive,
                                         lineHeight = 15.sp
@@ -473,6 +504,15 @@ fun OnboardingScreen(
                                         value = apiKeyInput,
                                         onValueChange = { apiKeyInput = it },
                                         label = { Text("Paste Bearer Token") },
+                                        visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                                        trailingIcon = {
+                                            IconButton(onClick = { showApiKey = !showApiKey }) {
+                                                Icon(
+                                                    imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                    contentDescription = if (showApiKey) "Hide key" else "Show key"
+                                                )
+                                            }
+                                        },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
@@ -510,7 +550,7 @@ fun OnboardingScreen(
                             } else {
                                 // Camera Scan Button
                                 Button(
-                                    onClick = { cameraLauncher.launch(null) },
+                                    onClick = { launchCamera() },
                                     colors = ButtonDefaults.buttonColors(containerColor = RoseQuartz),
                                     shape = RoundedCornerShape(20.dp),
                                     modifier = Modifier

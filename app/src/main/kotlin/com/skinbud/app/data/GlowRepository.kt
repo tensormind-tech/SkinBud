@@ -84,9 +84,10 @@ class GlowRepository(private val context: Context) {
 
     suspend fun analyzeAndSave(bitmap: Bitmap, useApiIfAvailable: Boolean = true): Result<GlowSnapshot> = withContext(Dispatchers.IO) {
         try {
-            // Save image locally
+            // Save image locally inside "scans" subfolder configured in file_paths.xml
+            val scansDir = File(context.filesDir, "scans").apply { if (!exists()) mkdirs() }
             val imageFileName = "scan_${System.currentTimeMillis()}.jpg"
-            val imageFile = File(context.filesDir, imageFileName)
+            val imageFile = File(scansDir, imageFileName)
             FileOutputStream(imageFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
             }
@@ -106,7 +107,18 @@ class GlowRepository(private val context: Context) {
                 )
             }
 
-            val updated = listOf(snapshot) + _snapshots.value
+            val currentList = _snapshots.value
+            // Keep up to 20 most recent scans, delete pruned photo files from disk
+            val maxRetention = 20
+            if (currentList.size >= maxRetention) {
+                val toPrune = currentList.drop(maxRetention - 1)
+                for (oldSnap in toPrune) {
+                    oldSnap.imagePath?.let { oldPath ->
+                        try { File(oldPath).delete() } catch (_: Exception) {}
+                    }
+                }
+            }
+            val updated = (listOf(snapshot) + currentList).take(maxRetention)
             _snapshots.value = updated
             _latestSnapshot.value = snapshot
             saveSnapshots()

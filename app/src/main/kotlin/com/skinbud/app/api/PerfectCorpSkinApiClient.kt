@@ -164,7 +164,7 @@ class PerfectCorpSkinApiClient(private val context: Context) {
             Pair(id, url)
         }
 
-        Log.d(TAG, "Step 2: Uploading image to S3: $uploadUrl")
+        Log.d(TAG, "Step 2: Uploading image to S3: ${uploadUrl.substringBefore('?')}")
 
         // Step 2: Upload Image to S3 Pre-signed URL
         val putRequest = Request.Builder()
@@ -783,20 +783,28 @@ class PerfectCorpSkinApiClient(private val context: Context) {
         }
 
         try {
+            val baseUrl = if (endpointUrl.contains("/s2s/")) {
+                endpointUrl.substringBefore("/s2s")
+            } else {
+                endpointUrl.trimEnd('/')
+            }
+
             val imageBytes = prepareOptimizedImage(bitmap)
             val fileSize = imageBytes.size
+            val fileName = "skinbud_vto_${System.currentTimeMillis()}.jpg"
 
             // Step 1: Register file to get pre-signed upload URL
             val fileRegPayload = JSONObject().apply {
                 put("files", JSONArray().apply {
                     put(JSONObject().apply {
+                        put("content_type", "image/jpeg")
+                        put("file_name", fileName)
                         put("file_size", fileSize)
-                        put("file_type", "image/jpeg")
                     })
                 })
             }
             val regRequest = Request.Builder()
-                .url("$endpointUrl/s2s/v2.0/file")
+                .url("$baseUrl/s2s/v2.0/file")
                 .addHeader("Authorization", "Bearer $currentKey")
                 .addHeader("Content-Type", "application/json")
                 .post(fileRegPayload.toString().toRequestBody("application/json".toMediaType()))
@@ -870,7 +878,7 @@ class PerfectCorpSkinApiClient(private val context: Context) {
             }
 
             val vtoTaskRequest = Request.Builder()
-                .url("$endpointUrl/s2s/v2.0/task/makeup-vto")
+                .url("$baseUrl/s2s/v2.0/task/makeup-vto")
                 .addHeader("Authorization", "Bearer $currentKey")
                 .addHeader("Content-Type", "application/json")
                 .post(vtoTaskJson.toString().toRequestBody("application/json".toMediaType()))
@@ -891,7 +899,7 @@ class PerfectCorpSkinApiClient(private val context: Context) {
             for (i in 1..25) {
                 delay(1200)
                 val pollRequest = Request.Builder()
-                    .url("$endpointUrl/s2s/v2.0/task/makeup-vto/$taskId")
+                    .url("$baseUrl/s2s/v2.0/task/makeup-vto/$taskId")
                     .addHeader("Authorization", "Bearer $currentKey")
                     .get()
                     .build()
@@ -1016,7 +1024,7 @@ class PerfectCorpSkinApiClient(private val context: Context) {
                     put(JSONObject().apply {
                         put("file_name", fileName)
                         put("file_size", fileSize)
-                        put("file_type", "image/jpeg")
+                        put("content_type", "image/jpeg")
                     })
                 })
             }

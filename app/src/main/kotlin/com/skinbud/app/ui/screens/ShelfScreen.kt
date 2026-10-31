@@ -30,10 +30,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -538,6 +541,7 @@ fun ShelfScreen(
     if (showGroqKeyDialog) {
         var keyInput by remember { mutableStateOf(productRepo.groqClient.apiKey) }
         var modelInput by remember { mutableStateOf(productRepo.groqClient.selectedModel) }
+        var showKey by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showGroqKeyDialog = false },
@@ -571,6 +575,15 @@ fun ShelfScreen(
                         value = keyInput,
                         onValueChange = { keyInput = it },
                         label = { Text("Groq API Key (gsk_...)") },
+                        visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showKey = !showKey }) {
+                                Icon(
+                                    imageVector = if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (showKey) "Hide key" else "Show key"
+                                )
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -578,7 +591,7 @@ fun ShelfScreen(
                     OutlinedTextField(
                         value = modelInput,
                         onValueChange = { modelInput = it },
-                        label = { Text("Model ID") },
+                        label = { Text("Model ID (e.g. llama-3.3-70b-versatile)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -587,8 +600,8 @@ fun ShelfScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        productRepo.groqClient.apiKey = keyInput
-                        productRepo.groqClient.selectedModel = modelInput
+                        productRepo.groqClient.apiKey = keyInput.trim()
+                        productRepo.groqClient.selectedModel = modelInput.trim()
                         showGroqKeyDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = RoseQuartz)

@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -44,8 +46,11 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -139,16 +144,38 @@ fun ScanScreen(
         }
     }
 
+    var tempCameraFile by remember { mutableStateOf<File?>(null) }
+
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        if (bitmap != null) {
-            if (isApiConfigured) {
-                processRealScan(bitmap)
-            } else {
-                pendingBitmap = bitmap
-                showMissingKeyPrompt = true
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        val file = tempCameraFile
+        if (success && file != null && file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            if (bitmap != null) {
+                if (isApiConfigured) {
+                    processRealScan(bitmap)
+                } else {
+                    pendingBitmap = bitmap
+                    showMissingKeyPrompt = true
+                }
             }
+        }
+    }
+
+    fun launchCamera() {
+        try {
+            val cacheImagesDir = File(context.cacheDir, "images").apply { mkdirs() }
+            val file = File(cacheImagesDir, "camera_capture_${System.currentTimeMillis()}.jpg")
+            tempCameraFile = file
+            val uri = FileProvider.getUriForFile(
+                context,
+                "com.skinbud.app.files",
+                file
+            )
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            errorMessage = "Camera error: ${e.message}"
         }
     }
 
@@ -405,7 +432,7 @@ fun ScanScreen(
                                 )
                             )
                             .clickable {
-                                cameraLauncher.launch(null)
+                                launchCamera()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -918,7 +945,7 @@ fun ScanScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "To send this real photo to https://yce.perfectcorp.com/, enter your Perfect Corp API key in Settings.\n\nAlternatively, you can analyze this real photo immediately using the built-in computer vision engine (analyzes true CIELAB skin tone, sebum sheen, and erythema redness).",
+                            text = "To send this real photo to Perfect Corp YouCam AI cloud, enter your API key in Settings.\n\nAlternatively, you can analyze this real photo immediately using the built-in computer vision engine (analyzes true CIELAB skin tone, sebum sheen, and erythema redness).",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -956,6 +983,7 @@ fun ScanScreen(
         if (showApiSettingsDialog) {
             var tempKey by remember { mutableStateOf(glowRepo.perfectCorpClient.apiKey) }
             var tempEndpoint by remember { mutableStateOf(glowRepo.perfectCorpClient.endpointUrl) }
+            var showTempKey by remember { mutableStateOf(false) }
 
             AlertDialog(
                 onDismissRequest = { showApiSettingsDialog = false },
@@ -978,6 +1006,15 @@ fun ScanScreen(
                             value = tempKey,
                             onValueChange = { tempKey = it },
                             label = { Text("API Key (Bearer Token)") },
+                            visualTransformation = if (showTempKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showTempKey = !showTempKey }) {
+                                    Icon(
+                                        imageVector = if (showTempKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (showTempKey) "Hide key" else "Show key"
+                                    )
+                                }
+                            },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -986,6 +1023,7 @@ fun ScanScreen(
                             value = tempEndpoint,
                             onValueChange = { tempEndpoint = it },
                             label = { Text("Endpoint Base URL") },
+                            placeholder = { Text("https://yce-api-01.makeupar.com") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
