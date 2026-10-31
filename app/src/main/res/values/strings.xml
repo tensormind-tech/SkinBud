@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SkinBud</string>
+    <string name="tagline">Intelligent AI Skin Analysis &amp; Care</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Today</string>
+    <string name="nav_scan">Skin Scan</string>
+    <string name="nav_routine">Routine</string>
+    <string name="nav_shelf">Shelf</string>
+    <string name="nav_insights">Insights</string>
+    
+    <!-- Home / Dashboard -->
+    <string name="glow_score_title">Today\'s Skin Health Score</string>
+    <string name="quick_scan_cta">Start Instant Scan</string>
+    <string name="daily_habits">Daily Glow Habits</string>
+    <string name="morning_routine">Morning Routine</string>
+    <string name="evening_routine">Evening Routine</string>
+    <string name="streak_days">%1$d Day Streak</string>
+    
+    <!-- Skin Metrics -->
+    <string name="metric_oiliness">Oiliness &amp; Sebum</string>
+    <string name="metric_redness">Redness &amp; Sensitivity</string>
+    <string name="metric_hydration">Hydration &amp; Moisture</string>
+    <string name="metric_dark_spots">Dark Spots &amp; Melanin</string>
+    <string name="metric_texture">Pores &amp; Texture</string>
+    <string name="metric_acne">Blemishes &amp; Acne</string>
+    <string name="metric_skin_age">Estimated Skin Age</string>
+    <string name="metric_skin_type">Skin Classification</string>
+    
+    <!-- Scan -->
+    <string name="scan_title">AI Skin Diagnostics</string>
+    <string name="scan_instruction">Align face within frame in even lighting</string>
+    <string name="capture_photo">Capture Photo</string>
+    <string name="upload_photo">Choose from Gallery</string>
+    <string name="demo_photo">Load Demo Scan</string>
+    <string name="analyzing_skin">Analyzing skin biomarkers...</string>
+    <string name="scan_complete">Analysis Complete</string>
+    
+    <!-- API Settings -->
+    <string name="api_settings">Perfect Corp Skin API Settings</string>
+    <string name="api_endpoint">https://yce.perfectcorp.com/</string>
+    <string name="api_key_label">API Access Key</string>
+    <string name="api_mode_label">Engine Mode</string>
+    <string name="api_status_connected">Connected to Perfect Corp API</string>
+    <string name="api_status_offline">On-Device AI Engine Active</string>
+    
+    <!-- Notifications & Reminders -->
+    <string name="notification_channel_reminders">Skincare Reminders</string>
+    <string name="notification_morning_title">Morning Skincare Time</string>
+    <string name="notification_morning_body">Cleanse, hydrate, and don\'t forget your SPF!</string>
+    <string name="notification_evening_title">Evening Routine Time</string>
+    <string name="notification_evening_body">Wash away daily pollutants and repair your skin barrier.</string>
+    <string name="notification_scan_title">Daily Skin Health Check</string>
+    <string name="notification_scan_body">Track today\'s progress with a quick 5-second scan.</string>
+</resources>
