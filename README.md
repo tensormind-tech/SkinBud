@@ -10,15 +10,9 @@
 
 ---
 
-## 🎬 Video Walkthrough & Interactive Demo
+## 🎬 App Video Walkthrough & Interactive Demo
 
-<div align="center">
-  <video src="https://github.com/tensormind-tech/SkinBud/releases/download/v1.0.0/final_demo.mp4" width="100%" controls="controls" poster="demo_poster.jpg"></video>
-  <br/><br/>
-  <a href="https://github.com/tensormind-tech/SkinBud/releases/download/v1.0.0/final_demo.mp4">
-    <img src="https://img.shields.io/badge/▶_Direct_Video_Link-final__demo.mp4-E91E63?style=for-the-badge&logo=googleplay&logoColor=white" alt="Direct Video Link"/>
-  </a>
-</div>
+https://github.com/user-attachments/assets/70fd0b5f-6046-40e9-afb4-fcc2c708ad6e
 
 ---
 
