@@ -10,6 +10,18 @@
 
 ---
 
+## 🎬 Video Walkthrough & Interactive Demo
+
+<div align="center">
+  <video src="https://github.com/tensormind-tech/SkinBud/releases/download/v1.0.0/final_demo.mp4" width="100%" controls="controls" poster="demo_poster.jpg"></video>
+  <br/><br/>
+  <a href="https://github.com/tensormind-tech/SkinBud/releases/download/v1.0.0/final_demo.mp4">
+    <img src="https://img.shields.io/badge/▶_Direct_Video_Link-final__demo.mp4-E91E63?style=for-the-badge&logo=googleplay&logoColor=white" alt="Direct Video Link"/>
+  </a>
+</div>
+
+---
+
 ## 🏆 Project Overview
 
 **SkinBud** is an intelligent, consumer-grade Android application engineered for the **YouCam API Skin AI & E-Commerce Hackathon**. By merging **Perfect Corp's state-of-the-art AI Skin Analysis & AR Simulation APIs** with **Groq ultra-fast LLM clinical reasoning (Llama-3.3-70B)**, SkinBud bridges the gap between facial diagnostic scans, predictive aging/barrier turnaround visualization, and high-conversion e-commerce product recommendations on Amazon.
